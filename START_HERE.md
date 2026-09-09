@@ -19,12 +19,15 @@ node --version
 
 ```
 cd backend
-python -m venv .venv
+py -3.12 -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 alembic upgrade head
 python -m app.seed
 ```
+
+> כל הפקודות במסמך מניחות התחלה מ**שורש הפרויקט** (התיקייה `hemora`).
+> אם כבר נמצאים בתוך `backend`, יש לדלג על שורת ה-`cd`.
 
 > ב-macOS/Linux, במקום `.venv\Scripts\activate` יש להריץ `source .venv/bin/activate`.
 
@@ -165,6 +168,8 @@ npx playwright test --workers=1
 | `Port 5173 is in use` | שרת קודם עדיין רץ | לסגור אותו, או לפתוח את הפורט שהודפס בפועל |
 | `WinError 10013` | פורט 8000 תפוס | לסגור את התהליך הקודם |
 | השרת נעצר פתאום | הוקלדה פקודה בטרמינל של השרת | כל שרת בטרמינל נפרד שלו |
+| `Unsupported platform: mingw_...` / `Rust not found` | ה-python שבשימוש הוא MinGW | ליצור את הסביבה עם `py -3.12 -m venv .venv` |
+| `Cannot find path ...\backend\backend` | כבר נמצאים בתיקייה | לדלג על שורת ה-`cd` |
 | הדפדפן מציג `{"detail":"Not Found"}` | נפתחה כתובת ה-API | לפתוח `localhost:5173` |
 
 ---
