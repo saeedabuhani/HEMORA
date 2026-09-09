@@ -8,7 +8,13 @@ from app.services import AuditService,ClinicalAnalysisEngine,PanelCompletenessSe
 from app.security import encrypt_national_id,national_id_hash
 from app.reporting import ReportService
 
-def test_israeli_id_validation(): assert validate_israeli_id("000000018"); assert not validate_israeli_id("123456789")
+@pytest.mark.parametrize("value,valid",[
+    ("123456789",True),("900000001",True),("311111118",True),
+    ("000000018",False),  # a leading zero is rejected
+    ("012345678",False),("12345678",False),("1234567890",False),
+    ("12345678a",False),("",False),
+])
+def test_national_id_format(value,valid): assert validate_israeli_id(value) is valid
 @pytest.mark.parametrize("value,expected",[(14,m.ResultStatus.NORMAL),(11,m.ResultStatus.LOW),(17,m.ResultStatus.HIGH)])
 def test_classification(value,expected): assert ClinicalAnalysisEngine.classify(value,12,16)[0]==expected
 def test_missing_reference_and_critical():

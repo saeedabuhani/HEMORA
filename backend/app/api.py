@@ -19,7 +19,7 @@ from .config import settings
 from .database import get_db
 from . import models as m
 from .schemas import BloodTestIn, DoctorAssignment, LoginIn, PatientIn, TokenPair
-from .security import create_token, decode_token, decrypt_national_id, generate_temporary_password, hash_password, mask_national_id, national_id_hash, verify_password
+from .security import create_token, decode_token, decrypt_national_id, hash_password, mask_national_id, national_id_hash, verify_password
 from .services import AuditService, ClinicalAnalysisEngine, DomainError, ExplanationService, ImportService, LongitudinalTrendService, PanelCompletenessService, PatientService, RecommendationEngine, TestComparisonEngine
 from .limiting import limiter
 from .reporting import ReportService
@@ -125,13 +125,13 @@ def create_patient_account(db,patient,actor):
     email=patient.email.strip().lower()
     if db.scalar(select(m.User.id).where(func.lower(m.User.email)==email)):
         raise HTTPException(409,detail={"code":"DUPLICATE_USER","message":"קיים כבר משתמש עם כתובת דוא\u05f4ל זו","details":{}})
-    password=generate_temporary_password()
+    password=settings.default_user_password
     account=m.User(email=email,password_hash=hash_password(password),role=m.Role.PATIENT,patient_id=patient.id)
     db.add(account); db.flush()
     AuditService.record(db,actor.id,"PATIENT_ACCOUNT_CREATED","user",account.id,{"email":email,"patient_id":patient.id})
     db.commit()
     return {"account":{"email":email,"temporary_password":password,
-                       "notice":"הסיסמה מוצגת פעם אחת בלבד. יש למסור אותה למטופל ולשמור אותה במקום בטוח."}}
+                       "notice":"סיסמת ההדגמה זהה לכל המשתמשים במערכת. בסביבה אמיתית יש להנפיק סיסמה ייחודית לכל חשבון."}}
 @router.get("/patients/{patient_id}")
 def patient(patient_id:str,user=Depends(current_user),db:Session=Depends(get_db)):
     p=assert_patient_access(db,user,patient_id)
@@ -228,6 +228,31 @@ def clinics(user=Depends(current_user),db:Session=Depends(get_db)):
     rows=db.scalars(select(m.Clinic).where(m.Clinic.active.is_(True)).order_by(m.Clinic.name)).all()
     if user.role in {m.Role.DOCTOR,m.Role.CLINIC}: rows=[c for c in rows if c.id==user.clinic_id]
     return [{"id":c.id,"name":c.name,"code":c.code,"city":c.city} for c in rows]
+
+@router.delete("/patients/{patient_id}")
+def delete_patient(patient_id:str,user=Depends(roles(m.Role.ADMIN,m.Role.DOCTOR,m.Role.CLINIC)),db:Session=Depends(get_db)):
+    """Permanently remove a patient and everything attached to them.
+
+    Deletion is scoped like every other patient action, so a doctor can only
+    remove their own patients and a clinic only its own. The audit entry is
+    written before the rows go, and keeps the masked id so the record of the
+    deletion survives the record itself.
+    """
+    patient=assert_patient_access(db,user,patient_id)
+    masked=mask_national_id(decrypt_national_id(patient.national_id_encrypted))
+    tests=db.scalars(select(m.BloodTest).where(m.BloodTest.patient_id==patient_id)).all()
+    for test in tests:
+        run_ids=select(m.AnalysisRun.id).where(m.AnalysisRun.blood_test_id==test.id)
+        db.query(m.AnalysisFinding).filter(m.AnalysisFinding.analysis_run_id.in_(run_ids)).delete(synchronize_session=False)
+        db.query(m.AnalysisRun).filter(m.AnalysisRun.blood_test_id==test.id).delete(synchronize_session=False)
+    db.query(m.Alert).filter(m.Alert.patient_id==patient_id).delete(synchronize_session=False)
+    db.query(m.DoctorPatient).filter(m.DoctorPatient.patient_id==patient_id).delete(synchronize_session=False)
+    db.query(m.User).filter(m.User.patient_id==patient_id).delete(synchronize_session=False)
+    AuditService.record(db,user.id,"PATIENT_DELETED","patient",patient_id,
+                        {"masked_national_id":masked,"name":f"{patient.first_name} {patient.last_name}","tests_removed":len(tests)})
+    db.delete(patient)  # blood tests and results cascade with the patient
+    db.commit()
+    return {"deleted":True,"tests_removed":len(tests)}
 
 @router.get("/patients/{patient_id}/doctors")
 def patient_doctors(patient_id:str,user=Depends(current_user),db:Session=Depends(get_db)):

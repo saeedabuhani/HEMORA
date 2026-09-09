@@ -141,6 +141,14 @@ export const api = {
       average_quality: number | null; quality_note: string;
     }>("/summary"),
   clinics: () => request<Clinic[]>("/clinics"),
+  deletePatient: (id: string) =>
+    request<{ deleted: boolean; tests_removed: number }>(`/patients/${id}`, { method: "DELETE" }),
+  createUser: (body: {
+    email: string; password: string; role: string;
+    clinic_id?: number | null; patient_id?: string | null;
+  }) => request<{ id: number; email: string; role: string }>("/admin/users", {
+    method: "POST", body: JSON.stringify(body),
+  }),
   patientDoctors: (id: string) => request<AssignedDoctor[]>(`/patients/${id}/doctors`),
   assignDoctor: (id: string, doctorUserId: number) =>
     request(`/patients/${id}/doctors`, { method: "POST", body: JSON.stringify({ doctor_user_id: doctorUserId }) }),

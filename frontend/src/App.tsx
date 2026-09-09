@@ -37,7 +37,7 @@ import {
   YAxis,
 } from "recharts";
 import { api, Patient } from "./api";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Trash2 } from "lucide-react";
 import {
   ChevronLeft,
   Disclaimer,
@@ -481,6 +481,75 @@ function Patients() {
     </div>
   );
 }
+function DeletePatientButton({
+  patientId,
+  name,
+  testCount,
+}: {
+  patientId: string;
+  name: string;
+  testCount: number;
+}) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [confirming, setConfirming] = useState(false);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const remove = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      await api.deletePatient(patientId);
+      await queryClient.invalidateQueries({ queryKey: ["patients"] });
+      await queryClient.invalidateQueries({ queryKey: ["summary"] });
+      navigate("/patients");
+    } catch (x) {
+      setError((x as Error).message);
+      setBusy(false);
+    }
+  };
+  if (!confirming)
+    return (
+      <button
+        className="btn-soft !border-red-200 !text-red-700"
+        onClick={() => setConfirming(true)}
+      >
+        <Trash2 className="h-4 w-4" />
+        מחיקת מטופל
+      </button>
+    );
+  return (
+    <div className="rounded-xl border-2 border-red-300 bg-red-50 p-4">
+      <p className="font-bold text-red-900">מחיקת {name} לצמיתות?</p>
+      <p className="mt-1 text-sm text-red-800">
+        יימחקו גם {testCount} בדיקות, התוצאות, ההתראות וחשבון הכניסה של המטופל.
+        לא ניתן לשחזר. פעולת המחיקה תירשם ביומן הביקורת.
+      </p>
+      {error && (
+        <p role="alert" className="mt-2 text-sm font-bold text-red-900">
+          {error}
+        </p>
+      )}
+      <div className="mt-3 flex gap-2">
+        <button
+          className="btn-primary !bg-red-700"
+          disabled={busy}
+          onClick={remove}
+        >
+          {busy ? "מוחק..." : "כן, למחוק"}
+        </button>
+        <button
+          className="btn-soft"
+          disabled={busy}
+          onClick={() => setConfirming(false)}
+        >
+          ביטול
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function CareTeam({ patientId }: { patientId: string }) {
   const queryClient = useQueryClient();
   const [error, setError] = useState("");
@@ -608,10 +677,17 @@ function PatientPage() {
           )}
         </div>
         {role !== "PATIENT" && (
-          <NavLink to={`/patients/${id}/new-test`} className="btn-primary">
-            <FilePlus2 />
-            הוספת בדיקה
-          </NavLink>
+          <div className="flex gap-2">
+            <NavLink to={`/patients/${id}/new-test`} className="btn-primary">
+              <FilePlus2 />
+              הוספת בדיקה
+            </NavLink>
+            <DeletePatientButton
+              patientId={id!}
+              name={`${patient.first_name} ${patient.last_name}`}
+              testCount={patient.test_count}
+            />
+          </div>
         )}
       </div>
       {(role === "ADMIN" || role === "CLINIC") && <CareTeam patientId={id!} />}

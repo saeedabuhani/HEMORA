@@ -8,11 +8,12 @@ Layout built by the `world` fixture:
 from datetime import date
 
 import pytest
+from sqlalchemy import select
 from app import models as m
 from app.security import encrypt_national_id, hash_password, national_id_hash
 
 PASSWORD = "Pass123!"
-IDS = ["000000018", "000000026", "000000034"]
+IDS = ["311111118", "322222226", "333333334"]
 
 
 @pytest.fixture
@@ -185,3 +186,42 @@ def test_unknown_patient_is_404_for_admin_and_403_for_others(client, world):
     missing = "00000000-0000-0000-0000-000000000000"
     assert client.get(f"/api/patients/{missing}", headers=auth(client, "admin@t.local")).status_code == 404
     assert client.get(f"/api/patients/{missing}", headers=auth(client, "da@t.local")).status_code == 404
+
+
+# ---------------------------------------------------------------- deletion
+
+
+def test_a_doctor_can_delete_their_own_patient(client, world):
+    own = world["patients"][0].id
+    response = client.delete(f"/api/patients/{own}", headers=auth(client, "da@t.local"))
+    assert response.status_code == 200
+    assert client.get(f"/api/patients/{own}", headers=auth(client, "admin@t.local")).status_code == 404
+
+
+def test_a_doctor_cannot_delete_someone_elses_patient(client, world):
+    other = world["patients"][1].id
+    assert client.delete(f"/api/patients/{other}", headers=auth(client, "da@t.local")).status_code == 403
+
+
+def test_a_clinic_cannot_delete_another_clinics_patient(client, world):
+    centre = world["patients"][2].id
+    assert client.delete(f"/api/patients/{centre}", headers=auth(client, "cn@t.local")).status_code == 403
+
+
+def test_a_patient_cannot_delete_anyone(client, world):
+    own = world["patients"][0].id
+    assert client.delete(f"/api/patients/{own}", headers=auth(client, "p@t.local")).status_code == 403
+
+
+def test_deleting_a_patient_removes_their_login_and_is_audited(client, db, world):
+    target = world["patients"][0].id
+    assert client.delete(f"/api/patients/{target}", headers=auth(client, "admin@t.local")).status_code == 200
+
+    # the patient's own login must not survive the record
+    db.expire_all()
+    assert db.scalar(select(m.User.id).where(m.User.patient_id == target)) is None
+    assert client.post("/api/auth/login",
+                       json={"email": "p@t.local", "password": PASSWORD}).status_code == 401
+
+    actions = {row["action"] for row in client.get("/api/audit", headers=auth(client, "admin@t.local")).json()}
+    assert "PATIENT_DELETED" in actions

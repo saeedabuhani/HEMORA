@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 from sqlalchemy import select
+from .config import settings
 from .database import Base, SessionLocal, engine
 from . import models as m
 from .security import encrypt_national_id, hash_password, national_id_hash
@@ -21,13 +22,13 @@ def seed_demo_data():
     for code,he,en,cat,desc,unit,low,high in ANALYTES:
         a=m.Analyte(code=code,display_name_he=he,display_name_en=en,category=cat,description_he=desc,typical_unit=unit); db.add(a); db.flush(); analytes[code]=a; db.add(m.ReferenceRange(analyte_id=a.id,laboratory_id=None,unit=unit,min_value=low,max_value=high,source_reference="טווח כללי לצורכי הדגמה בלבד",active=True))
     for alias,code in [("HB","HGB"),("HEMOGLOBIN","HGB"),("המוגלובין","HGB"),("GLU","GLUCOSE")]: db.add(m.AnalyteAlias(analyte_id=analytes[code].id,alias=alias))
-    ids=["000000018","000000026","000000034","000000042","000000059","000000067"]
+    ids=["311111118","322222226","333333334","344444442","355555559","366666667"]
     patients=[]
     names=[("נועה","לוי"),("דניאל","כהן"),("מיה","ישראלי"),("יואב","שלום"),("תמר","אור"),("אדם","גל")]
     for i,(first,last) in enumerate(names):
         p=m.Patient(first_name=first,last_name=last,national_id_encrypted=encrypt_national_id(ids[i]),national_id_hash=national_id_hash(ids[i]),date_of_birth=date(1985+i,2,12),biological_sex="FEMALE" if i%2==0 else "MALE",email=f"demo{i+1}@hemora.local",clinic_id=(north.id if i<3 else centre.id),demo=True); db.add(p); db.flush(); patients.append(p)
     def user(email,role,clinic_id=None,patient_id=None):
-        row=m.User(email=email,password_hash=hash_password("Hemora123!"),role=role,clinic_id=clinic_id,patient_id=patient_id); db.add(row); db.flush(); return row
+        row=m.User(email=email,password_hash=hash_password(settings.default_user_password),role=role,clinic_id=clinic_id,patient_id=patient_id); db.add(row); db.flush(); return row
     user("admin@hemora.local",m.Role.ADMIN)
     doctor1=user("doctor1@hemora.local",m.Role.DOCTOR,clinic_id=north.id)
     doctor2=user("doctor2@hemora.local",m.Role.DOCTOR,clinic_id=north.id)

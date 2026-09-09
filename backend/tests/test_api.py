@@ -49,7 +49,7 @@ def admin(client, db):
     return {"headers": {'Authorization': f'Bearer {token}'}, "clinic": clinic}
 
 
-def new_patient_body(clinic_id, national_id="000000018"):
+def new_patient_body(clinic_id, national_id="311111118"):
     return {"first_name": "נועה", "last_name": "לוי", "national_id": national_id,
             "date_of_birth": "1990-05-01", "biological_sex": "FEMALE", "clinic_id": clinic_id}
 
@@ -63,7 +63,7 @@ def test_creating_a_patient_stores_the_id_masked(client, admin):
 
 
 def test_an_invalid_israeli_id_is_refused(client, admin):
-    body = new_patient_body(admin["clinic"].id, national_id="123456789")
+    body = new_patient_body(admin["clinic"].id, national_id="012345678")  # leading zero
     response = client.post('/api/patients', json=body, headers=admin["headers"])
     assert response.status_code == 400
     assert response.json()["detail"]["code"] == "INVALID_NATIONAL_ID"
@@ -193,7 +193,7 @@ def test_downloading_a_report_is_written_to_the_audit_log(client, ready):
 def test_the_audit_log_never_stores_a_national_id(client, ready):
     rows = client.get('/api/audit', headers=ready["headers"]).json()
     serialised = str(rows)
-    assert "000000018" not in serialised
+    assert "311111118" not in serialised
     assert "national_id" not in serialised
 
 
@@ -220,7 +220,7 @@ def test_a_patient_account_is_created_and_can_sign_in(client, admin):
 
 def test_the_new_account_sees_only_its_own_record(client, admin):
     created = client.post('/api/patients', json=account_body(admin["clinic"].id), headers=admin["headers"]).json()
-    other = new_patient_body(admin["clinic"].id, national_id="000000026")
+    other = new_patient_body(admin["clinic"].id, national_id="322222226")
     other_id = client.post('/api/patients', json=other, headers=admin["headers"]).json()["id"]
 
     token = client.post('/api/auth/login', json={
