@@ -15,6 +15,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
+from .config import settings
 from .database import get_db
 from . import models as m
 from .schemas import BloodTestIn, DoctorAssignment, LoginIn, PatientIn, TokenPair
@@ -74,7 +75,7 @@ def patient_dict(p,db):
     return {"id":p.id,"first_name":p.first_name,"last_name":p.last_name,"masked_national_id":mask_national_id(decrypt_national_id(p.national_id_encrypted)),"date_of_birth":p.date_of_birth,"biological_sex":p.biological_sex,"phone":p.phone,"email":p.email,"demo":p.demo,"clinic_id":p.clinic_id,"clinic_name":(db.get(m.Clinic,p.clinic_id).name if p.clinic_id else None),"test_count":len(dates),"last_test_date":dates[0] if dates else None}
 
 @router.post("/auth/login",response_model=TokenPair)
-@limiter.limit("10/minute")
+@limiter.limit(settings.login_rate_limit)
 def login(data:LoginIn,request:Request,db:Session=Depends(get_db)):
     user=db.scalar(select(m.User).where(func.lower(m.User.email)==data.email.lower()))
     if not user or not verify_password(data.password,user.password_hash): raise HTTPException(401,detail={"code":"INVALID_CREDENTIALS","message":"פרטי ההתחברות שגויים","details":{}})

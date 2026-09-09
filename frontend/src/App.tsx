@@ -180,6 +180,7 @@ function Login() {
                   <button
                     key={value}
                     type="button"
+                    aria-label={`כניסת הדגמה: ${label}`}
                     className="btn-soft flex-col items-start !py-2 text-right text-sm"
                     onClick={() => {
                       setEmail(value);
@@ -209,7 +210,7 @@ function Layout() {
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]" dir="rtl">
       <aside
-        className={`${open ? "block" : "hidden"} fixed inset-y-0 right-0 z-40 w-64 bg-ink p-5 text-white lg:static lg:block`}
+        className={`${open ? "block" : "hidden"} fixed inset-y-0 right-0 z-40 w-64 bg-ink p-5 text-white lg:sticky lg:top-0 lg:block lg:h-screen`}
       >
         <Logo compact />
         <nav className="mt-10 space-y-1">
