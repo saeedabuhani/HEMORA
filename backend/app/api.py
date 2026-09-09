@@ -19,7 +19,7 @@ from .config import settings
 from .database import get_db
 from . import models as m
 from .schemas import BloodTestIn, DoctorAssignment, LoginIn, PatientIn, TokenPair
-from .security import create_token, decode_token, decrypt_national_id, mask_national_id, national_id_hash, verify_password
+from .security import create_token, decode_token, decrypt_national_id, generate_temporary_password, hash_password, mask_national_id, national_id_hash, verify_password
 from .services import AuditService, ClinicalAnalysisEngine, DomainError, ExplanationService, ImportService, LongitudinalTrendService, PanelCompletenessService, PatientService, RecommendationEngine, TestComparisonEngine
 from .limiting import limiter
 from .reporting import ReportService
@@ -108,7 +108,30 @@ def create_patient(data:PatientIn,user=Depends(roles(m.Role.DOCTOR,m.Role.CLINIC
     if user.role==m.Role.DOCTOR:
         db.add(m.DoctorPatient(doctor_user_id=user.id,patient_id=p.id,assigned_by=user.id))
         AuditService.record(db,user.id,"DOCTOR_ASSIGNED","patient",p.id,{"doctor_user_id":user.id}); db.commit()
-    return patient_dict(p,db)
+    payload=patient_dict(p,db)
+    if data.create_account:
+        payload.update(create_patient_account(db,p,user))
+    return payload
+
+def create_patient_account(db,patient,actor):
+    """Create the patient's own login and return the one-time password.
+
+    The password is generated here, hashed before storage and returned exactly
+    once so the clinician can hand it over. It is never stored in plain text
+    and never written to the audit log.
+    """
+    if not patient.email:
+        raise HTTPException(422,detail={"code":"EMAIL_REQUIRED","message":"נדרשת כתובת דוא\u05f4ל כדי ליצור חשבון כניסה למטופל","details":{}})
+    email=patient.email.strip().lower()
+    if db.scalar(select(m.User.id).where(func.lower(m.User.email)==email)):
+        raise HTTPException(409,detail={"code":"DUPLICATE_USER","message":"קיים כבר משתמש עם כתובת דוא\u05f4ל זו","details":{}})
+    password=generate_temporary_password()
+    account=m.User(email=email,password_hash=hash_password(password),role=m.Role.PATIENT,patient_id=patient.id)
+    db.add(account); db.flush()
+    AuditService.record(db,actor.id,"PATIENT_ACCOUNT_CREATED","user",account.id,{"email":email,"patient_id":patient.id})
+    db.commit()
+    return {"account":{"email":email,"temporary_password":password,
+                       "notice":"הסיסמה מוצגת פעם אחת בלבד. יש למסור אותה למטופל ולשמור אותה במקום בטוח."}}
 @router.get("/patients/{patient_id}")
 def patient(patient_id:str,user=Depends(current_user),db:Session=Depends(get_db)):
     p=assert_patient_access(db,user,patient_id)

@@ -56,6 +56,9 @@ export type Explanation = {
   limitations: string[];
   algorithm_version: string;
 };
+export type NewPatientResult = Patient & {
+  account?: { email: string; temporary_password: string; notice: string };
+};
 export type Clinic = { id: number; name: string; code: string; city: string | null };
 export type AssignedDoctor = { doctor_user_id: number; email: string; assigned_at: string };
 export type TestDetail = {
@@ -149,7 +152,7 @@ export const api = {
   createTest: (body: any) =>
     request<any>("/tests", { method: "POST", body: JSON.stringify(body) }),
   createPatient: (body: any) =>
-    request<any>("/patients", { method: "POST", body: JSON.stringify(body) }),
+    request<NewPatientResult>("/patients", { method: "POST", body: JSON.stringify(body) }),
   downloadReport: (id: string, format: "pdf" | "csv") =>
     download(`/reports/${id}.${format}`, `hemora-${id}.${format}`),
 };

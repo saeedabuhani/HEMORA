@@ -195,3 +195,63 @@ def test_the_audit_log_never_stores_a_national_id(client, ready):
     serialised = str(rows)
     assert "000000018" not in serialised
     assert "national_id" not in serialised
+
+
+# ---------------------------------------------------------------- patient accounts
+
+
+def account_body(clinic_id, email="noa@example.local"):
+    body = new_patient_body(clinic_id)
+    body.update({"email": email, "create_account": True})
+    return body
+
+
+def test_a_patient_account_is_created_and_can_sign_in(client, admin):
+    response = client.post('/api/patients', json=account_body(admin["clinic"].id), headers=admin["headers"])
+    assert response.status_code == 200, response.text
+    account = response.json()["account"]
+    assert account["email"] == "noa@example.local"
+
+    login = client.post('/api/auth/login',
+                        json={"email": account["email"], "password": account["temporary_password"]})
+    assert login.status_code == 200
+    assert login.json()["role"] == "PATIENT"
+
+
+def test_the_new_account_sees_only_its_own_record(client, admin):
+    created = client.post('/api/patients', json=account_body(admin["clinic"].id), headers=admin["headers"]).json()
+    other = new_patient_body(admin["clinic"].id, national_id="000000026")
+    other_id = client.post('/api/patients', json=other, headers=admin["headers"]).json()["id"]
+
+    token = client.post('/api/auth/login', json={
+        "email": created["account"]["email"],
+        "password": created["account"]["temporary_password"]}).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    listing = client.get('/api/patients', headers=headers).json()
+    assert [p["id"] for p in listing["items"]] == [created["id"]]
+    assert client.get(f'/api/patients/{other_id}', headers=headers).status_code == 403
+
+
+def test_no_account_is_created_unless_asked_for(client, admin):
+    body = new_patient_body(admin["clinic"].id)
+    body["email"] = "quiet@example.local"
+    response = client.post('/api/patients', json=body, headers=admin["headers"])
+    assert response.status_code == 200
+    assert "account" not in response.json()
+
+
+def test_an_account_requires_an_email(client, admin):
+    body = new_patient_body(admin["clinic"].id)
+    body["create_account"] = True
+    response = client.post('/api/patients', json=body, headers=admin["headers"])
+    assert response.status_code == 422
+    assert response.json()["detail"]["code"] == "EMAIL_REQUIRED"
+
+
+def test_the_temporary_password_never_reaches_the_audit_log(client, admin):
+    created = client.post('/api/patients', json=account_body(admin["clinic"].id), headers=admin["headers"]).json()
+    password = created["account"]["temporary_password"]
+    rows = str(client.get('/api/audit', headers=admin["headers"]).json())
+    assert password not in rows
+    assert "PATIENT_ACCOUNT_CREATED" in rows

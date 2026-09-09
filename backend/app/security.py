@@ -1,4 +1,4 @@
-import base64, hashlib, hmac, re
+import base64, hashlib, hmac, re, secrets
 from datetime import datetime, timedelta, timezone
 import jwt
 from argon2 import PasswordHasher
@@ -25,6 +25,19 @@ def _fernet():
 def encrypt_national_id(value:str)->str: return _fernet().encrypt(re.sub(r"\D","",value).zfill(9).encode()).decode()
 def decrypt_national_id(value:str)->str: return _fernet().decrypt(value.encode()).decode()
 def mask_national_id(value:str)->str: return "*******"+re.sub(r"\D","",value).zfill(9)[-2:]
+ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
+
+def generate_temporary_password(length: int = 12) -> str:
+    """A one-time password for a new patient account.
+
+    Uses secrets, and omits characters that are easy to misread (0/O, 1/l/I)
+    because a clinician usually reads this out or writes it down.
+    """
+    while True:
+        candidate = "".join(secrets.choice(ALPHABET) for _ in range(length))
+        if any(c.isupper() for c in candidate) and any(c.islower() for c in candidate) and any(c.isdigit() for c in candidate):
+            return candidate + "!"
+
 def create_token(user_id:int, role:str, kind:str="access"):
     ttl=timedelta(minutes=settings.access_token_minutes) if kind=="access" else timedelta(days=settings.refresh_token_days)
     now=datetime.now(timezone.utc); return jwt.encode({"sub":str(user_id),"role":role,"type":kind,"iat":now,"exp":now+ttl},settings.jwt_secret,algorithm="HS256")

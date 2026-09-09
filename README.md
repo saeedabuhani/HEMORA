@@ -152,7 +152,7 @@ CORS מוגבל, כותרות אבטחה, ORM פרמטרי, הצפנת תעוד�
 
 | שכבה | פקודה | תוצאה |
 |---|---|---|
-| Backend | `cd backend && pytest -q` | **68 עוברות** |
+| Backend | `cd backend && pytest -q` | **73 עוברות** |
 | Frontend | `cd frontend && npm test` | **3 עוברות** |
 | בנייה | `cd frontend && npm run build` | ללא שגיאות |
 | E2E | ראו למטה | **10 עוברות** |

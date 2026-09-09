@@ -4,7 +4,7 @@ from .models import Role
 class LoginIn(BaseModel): email: str; password: str
 class TokenPair(BaseModel): access_token:str; refresh_token:str; token_type:str="bearer"; role:Role
 class PatientIn(BaseModel):
-    first_name:str=Field(min_length=1,max_length=80); last_name:str=Field(min_length=1,max_length=80); national_id:str; date_of_birth:date; biological_sex:str; phone:str|None=None; email:str|None=None; clinic_id:int|None=None
+    first_name:str=Field(min_length=1,max_length=80); last_name:str=Field(min_length=1,max_length=80); national_id:str; date_of_birth:date; biological_sex:str; phone:str|None=None; email:str|None=None; clinic_id:int|None=None; create_account:bool=False
     @model_validator(mode="after")
     def validate_profile(self):
         if self.date_of_birth > date.today(): raise ValueError("תאריך לידה עתידי אינו תקין")
