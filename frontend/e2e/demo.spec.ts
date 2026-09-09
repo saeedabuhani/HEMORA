@@ -1,0 +1,1 @@
+import {test,expect} from '@playwright/test';test('login screen offers demo roles',async({page})=>{await page.goto('/login');await expect(page.getByText('הבדיקות שלך.')).toBeVisible();await expect(page.getByRole('button',{name:'קלינאי'})).toBeVisible()});

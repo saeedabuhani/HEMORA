@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root {
+  font-family: Arial, sans-serif;
+  color: #132a36;
+  background: #f5f8f9;
+  font-synthesis: none;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid #71cbc5;
+  outline-offset: 2px;
+}
+.card {
+  @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+}
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold transition disabled:opacity-50;
+}
+.btn-primary {
+  @apply btn bg-brand-600 text-white hover:bg-brand-700;
+}
+.btn-soft {
+  @apply btn bg-brand-50 text-brand-700 hover:bg-brand-100;
+}
+.field {
+  @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 focus:border-brand-500;
+}
+.label {
+  @apply mb-1.5 block text-sm font-semibold text-slate-700;
+}
+.badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold;
+}
+.status-NORMAL {
+  @apply bg-emerald-100 text-emerald-800;
+}
+.status-LOW,
+.status-HIGH {
+  @apply bg-amber-100 text-amber-900;
+}
+.status-CRITICAL_LOW,
+.status-CRITICAL_HIGH {
+  @apply bg-red-100 text-red-800;
+}
+.status-UNVERIFIED,
+.status-UNKNOWN_REFERENCE {
+  @apply bg-slate-200 text-slate-700;
+}
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none;
+  }
+}

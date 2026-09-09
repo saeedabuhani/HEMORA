@@ -1,0 +1,7 @@
+analyte,value,unit,reference_min,reference_max,lab_flag
+WBC,6.0,10^3/uL,4,11,
+RBC,4.5,10^6/uL,4.2,5.8,
+HGB,11.7,g/dL,12,16,L
+HCT,36.5,%,36,48,
+MCV,81,fL,80,100,
+PLT,280,10^3/uL,150,450,
