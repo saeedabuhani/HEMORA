@@ -69,6 +69,41 @@ npm run dev
 
 יש להמתין לשורה `Local: http://localhost:5173/`
 
+---
+
+## גרסה מקוצרת — שורה אחת לכל טרמינל
+
+הפקודות למעלה מניחות שהטרמינל כבר נמצא בתיקיית הפרויקט. אם לא, אפשר
+להעתיק את השורות הבאות במלואן — כל אחת כוללת את המעבר לתיקייה.
+יש להחליף את `<נתיב הפרויקט>` בנתיב שאליו חילצתם את הפרויקט.
+
+**טרמינל 1 — התקנה והרצה של ה-Backend:**
+
+```
+cd "<נתיב הפרויקט>/backend"; py -3.12 -m venv .venv; .venv\Scripts\activate; pip install -r requirements.txt; alembic upgrade head; python -m app.seed; uvicorn app.main:app --reload
+```
+
+**טרמינל 2 — התקנה והרצה של ה-Frontend:**
+
+```
+cd "<נתיב הפרויקט>/frontend"; npm install; npm run dev
+```
+
+בהרצות הבאות אין צורך להתקין שוב:
+
+```
+cd "<נתיב הפרויקט>/backend"; .venv\Scripts\activate; uvicorn app.main:app --reload
+```
+
+```
+cd "<נתיב הפרויקט>/frontend"; npm run dev
+```
+
+> **כל שרת בטרמינל נפרד משלו.** הקלדת פקודה נוספת בטרמינל שבו רץ שרת
+> עוצרת אותו — זו התקלה הנפוצה ביותר בהרצה הראשונה.
+
+---
+
 ### פתיחת האפליקציה
 
 בדפדפן:
