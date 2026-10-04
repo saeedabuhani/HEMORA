@@ -98,6 +98,10 @@ Docker משתמש ב-PostgreSQL, עם אותו קוד בדיוק.
 
 > החשבונות והסיסמאות מיועדים לפיתוח ולהדגמה בלבד.
 > כל ששת המטופלים בדויים ומסומנים `DEMO DATA`.
+>
+> **כל הנתונים במאגר סינתטיים — אין בו מידע רפואי או אישי אמיתי. סיסמת ההדגמה מיועדת לשימוש מקומי בלבד; אין להשתמש בה בסביבה אמיתית.**
+>
+> *English: all data in this repository is synthetic — there is no real medical or personal data. The demo password is for local demo use only; never use it in a real deployment.*
 
 **רופא א׳ ורופא ב׳ שייכים לאותה מרפאה אך מקבלים רשימות שונות** — כך אפשר לראות
 מיד את ההפרדה ברמת הרופא ואת ההפרדה ברמת המרפאה, בלי להסביר.
