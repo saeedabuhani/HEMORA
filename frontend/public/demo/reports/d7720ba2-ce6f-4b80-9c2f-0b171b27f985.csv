@@ -1,0 +1,11 @@
+﻿code,name_he,value,unit,status,reference_min,reference_max
+HGB,המוגלובין,10.9,g/dL,LOW,12.0,16.0
+WBC,תאי דם לבנים,6.2,10^3/uL,NORMAL,4.0,11.0
+RBC,תאי דם אדומים,4.7,10^6/uL,NORMAL,4.2,5.8
+HCT,המטוקריט,41.0,%,NORMAL,36.0,48.0
+MCV,נפח כדורית ממוצע,88.0,fL,NORMAL,80.0,100.0
+MCH,כמות המוגלובין בכדורית,29.0,pg,NORMAL,27.0,33.0
+MCHC,ריכוז המוגלובין בכדורית,34.0,g/dL,NORMAL,32.0,36.0
+RDW,שונות בגודל כדוריות,12.7,%,NORMAL,11.5,14.5
+PLT,טסיות,265.0,10^3/uL,NORMAL,150.0,450.0
+MPV,נפח טסית ממוצע,9.5,fL,NORMAL,7.5,12.0
