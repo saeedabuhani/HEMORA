@@ -62,10 +62,10 @@ The clinical logic is deterministic and rule-based (no AI), so every classificat
 |---|---|
 | Backend | FastAPI, SQLAlchemy 2, Alembic, Pydantic 2, pytest |
 | Frontend | React 18, TypeScript, Vite, Tailwind, TanStack Query, Recharts, Vitest, Playwright |
-| Database | SQLite for local development, PostgreSQL in Docker |
+| Database | SQLite for local development; PostgreSQL via the Docker Compose file (not yet verified) |
 | Auth | Argon2 password hashing, JWT access and refresh tokens, server-side RBAC |
 | Reports | ReportLab with bidi support (Hebrew PDF), CSV |
-| Packaging | Docker Compose |
+| Packaging | Docker Compose file included (not yet verified end to end) |
 
 ## Quick start
 
@@ -91,7 +91,7 @@ npm run dev
 
 Open http://localhost:5173. API docs are at http://localhost:8000/docs.
 
-With Docker (not verified on the author's machine, see Roadmap): `cp .env.example .env && docker compose up --build`.
+**Docker:** the repository contains a `docker-compose.yml`, but it has **not been verified end to end** yet, so the native setup above is the supported way to run the project. If you try it: `cp .env.example .env && docker compose up --build`.
 
 To build the static demo yourself: `cd frontend && npm run build:demo`. To re-record the fixtures from a running seeded backend: `node scripts/record-demo.mjs`.
 
