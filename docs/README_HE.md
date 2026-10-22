@@ -38,6 +38,8 @@ HEMORA היא מערכת Full-Stack בעברית וב-RTL לניהול, ניתו
 
 ## הפעלה מהירה עם Docker
 
+> **הערה:** קובץ ה-Docker Compose לא אומת עד הסוף. הדרך המאומתת להפעלה היא ההפעלה ללא Docker, בהמשך.
+
 ```bash
 cp .env.example .env
 docker compose up --build
