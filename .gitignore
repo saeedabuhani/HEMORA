@@ -13,3 +13,6 @@ test-results/
 output/
 .claude/
 venv/
+
+# Local Netlify folder
+.netlify

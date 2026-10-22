@@ -6,6 +6,10 @@ import App from "./App";
 import "./index.css";
 import { ApiError } from "./api";
 
+if (import.meta.env.VITE_DEMO) {
+  await import("./demo/install").then((m) => m.mountDemoBanner());
+}
+
 const client = new QueryClient({
   defaultOptions: {
     queries: {

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -p tsconfig.app.json && vite build",
+    "build:demo": "tsc -p tsconfig.app.json && vite build --mode demo",
     "lint": "eslint .",
     "test": "vitest run",
     "e2e": "playwright test"
