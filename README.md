@@ -135,3 +135,5 @@ The full Hebrew documentation is in [`docs/`](docs): the original [README](docs/
 ## License
 
 See [LICENSE](LICENSE).
+
+© 2026 Saeed Abuhani – All rights reserved
